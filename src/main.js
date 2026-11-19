@@ -1,4 +1,8 @@
 import axios from "axios";
+const api = axios.create({
+    baseURL: "https://dummyjson.com",
+    timeout: 5000
+});
 const tousCartes = document.getElementById("recipesGrid");
 const filtre = document.getElementById("quickFilters")
 let recette = []
@@ -131,7 +135,7 @@ async function afficherRecette() {
   
   
 
-    const data = await axios.get("https://dummyjson.com/recipes");
+    const data = await api.get("/recipes?limit=15");
    recette = data.data.recipes;
   console.log(recette)
 const pays = [...new Set(recette.map(e => e.cuisine))]
@@ -176,6 +180,42 @@ const btnTous = document.getElementById('btn-tous')
   filterByTag("");
 };
   filterByTag("");
+
+
+  const btnAjoutData = document.getElementById('submitRecipeBtn')
+  btnAjoutData.addEventListener("click" , async () =>{
+
+ try {
+        const nouvelleRecette = {
+            name: document.getElementById("recipeName").value,
+            cuisine: document.getElementById("recipeCuisine").value,
+            difficulty: document.getElementById("recipeDifficulty").value,
+            cookTimeMinutes: Number(document.getElementById("recipeTime").value),
+            image: document.getElementById("recipeImage").value
+        };
+
+        const response = await axios.post(
+            "https://dummyjson.com/recipes/add",
+            nouvelleRecette
+        );
+
+        document.getElementById('addRecipeModal').classList.add('hidden')
+        
+        const carte = creerCarte(
+    response.data.image,
+    response.data.cuisine,
+    response.data.name,
+    response.data.difficulty,
+    response.data.cookTimeMinutes
+);
+
+tousCartes.prepend(carte);
+      
+    } catch (error) {
+        console.log(error);
+    }
+
+  })
     
   } catch (error) {
 
@@ -185,4 +225,7 @@ document.getElementById('errorDescription').textContent = "il yas un probleme de
   }
 }
 afficherRecette();
- 
+ document.getElementById('btn-ajouter-recette').addEventListener("click" , () =>{
+
+  document.getElementById('addRecipeModal').classList.remove('hidden')
+ })
