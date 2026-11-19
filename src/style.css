@@ -1,1 +1,38 @@
 @import "tailwindcss";
+
+
+@theme {
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
+
+  /* Couleurs personnalisées */
+  --color-charcoal: #18181B;     /* 60% Fond dominant */
+  --color-anthracite: #27272A;   /* 30% Cartes / Modales */
+  --color-amberGold: #F59E0B;    /* 10% Accent / CTA */
+  --color-amberHover: #D97706;
+  --color-subtleBorder: #3F3F46;
+          
+}
+
+ @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        /* Scrollbar discrète adaptée au thème sombre */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #18181B;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3F3F46;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #52525B;
+        }
+
