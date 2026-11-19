@@ -66,8 +66,7 @@
                             </button>
                         </div>
 
-                        <button onclick="openAddModal()" class="hidden md:inline-flex items-center gap-2 bg-[#F59E0B] hover:bg-[#D97706] text-[#18181B] font-semibold px-4 py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-[#F59E0B]/15 whitespace-nowrap active:scale-95">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                        <button id="btn-ajouter-recette" class=" md:inline-flex items-center gap-2 bg-[#F59E0B] hover:bg-[#D97706] text-[#18181B] font-semibold px-4 py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-[#F59E0B]/15 whitespace-nowrap active:scale-95">
                             <span>+ Ajouter une recette</span>
                         </button>
                     </div>
@@ -165,7 +164,7 @@
 
 
     <!-- ================= MODALE D'AJOUT DE RECETTE (US-03) ================= -->
-    <div id="addRecipeModal" class=" fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+    <div id="addRecipeModal" class=" hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
         <div class="bg-[#27272A] border border-[#3F3F46] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-fade-in">
             <!-- Header Modale -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-[#3F3F46]">
@@ -179,7 +178,7 @@
             </div>
 
             <!-- Formulaire -->
-            <form id="addRecipeForm" onsubmit="submitRecipeForm(event)" novalidate class="p-6 space-y-4">
+            <form id="addRecipeForm" novalidate class="p-6 space-y-4">
                 
                 <!-- Champ : Nom de la recette (3 à 60 caractères) -->
                 <div>
@@ -200,17 +199,12 @@
                     <label for="recipeCuisine" class="block text-xs font-semibold uppercase tracking-wider text-zinc-300 mb-1.5">
                         Type de cuisine <span class="text-[#F59E0B]">*</span>
                     </label>
-                    <select 
-                        id="recipeCuisine" 
+                    <input 
+                        id="recipeCuisine" placeholder="EX: Asian , Italienne ...."
                         class="w-full bg-[#18181B] border border-[#3F3F46] rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-[#F59E0B] transition-colors"
                     >
-                        <option value="">Sélectionner une cuisine...</option>
-                        <option value="Marocaine">Marocaine</option>
-                        <option value="Italienne">Italienne</option>
-                        <option value="Française">Française</option>
-                        <option value="Espagnole">Espagnole</option>
-                        <option value="Internationale">Internationale</option>
-                    </select>
+                        
+        
                     <p id="error-recipeCuisine" class="hidden text-xs text-red-400 mt-1.5 font-medium"></p>
                 </div>
 
@@ -270,7 +264,7 @@
                         Annuler
                     </button>
                     <button 
-                        type="submit" 
+                        type="button" 
                         id="submitRecipeBtn"
                         class="inline-flex items-center justify-center gap-2 bg-[#F59E0B] hover:bg-[#D97706] disabled:opacity-60 disabled:cursor-not-allowed text-[#18181B] font-semibold px-5 py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-[#F59E0B]/15 min-w-[175px]"
                     >
