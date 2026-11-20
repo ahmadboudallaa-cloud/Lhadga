@@ -7,11 +7,11 @@ const tousCartes = document.getElementById("recipesGrid");
 const filtre = document.getElementById("quickFilters")
 let recette = []
 
-function creerCarte(image, cat, name, dif, temps) {
+function creerCarte(image, cat, name, dif, temps , idBtn) {
   const divCartes = document.createElement("div");
 
   divCartes.className =
-    "bg-[var(--color-anthracite)] border border-[var(--color-subtleBorder)] hover:border-[var(--color-amberGold)]/60  rounded-2xl overflow-hidden flex flex-col transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/40 animate-fade-in";
+    "carte-recette bg-[var(--color-anthracite)] border border-[var(--color-subtleBorder)] hover:border-[var(--color-amberGold)]/60  rounded-2xl overflow-hidden flex flex-col transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/40 animate-fade-in";
 
   const imageContainer = document.createElement("div");
   imageContainer.className = "relative h-48 overflow-hidden bg-[#18181B]";
@@ -64,9 +64,10 @@ function creerCarte(image, cat, name, dif, temps) {
 
   const deleteButton = document.createElement("button");
   deleteButton.className =
-    "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/30 transition-colors";
+    "btn-delet inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/30 transition-colors";
   deleteButton.textContent = "Supprimer";
-  deleteButton.title = "Supprimer cette recette";
+ 
+  deleteButton.dataset.id = idBtn
 
   footerCarte.append(clubName, deleteButton);
 
@@ -101,8 +102,9 @@ function filterByTag(pay){
       const name = e.name;
       const dif = e.difficulty;
       const temps = e.cookTimeMinutes;
+      const idBtn = e.id
 
-      const carte = creerCarte(image, cat, name, dif, temps);
+      const carte = creerCarte(image, cat, name, dif, temps , idBtn);
 
         tousCartes.append(carte);
     });
@@ -114,9 +116,9 @@ recetteFiltre.forEach(payChoi =>{
       const name = payChoi.name;
       const dif = payChoi.difficulty;
       const temps = payChoi.cookTimeMinutes;
-
-      const carte = creerCarte(image, cat, name, dif, temps);
-
+    const idBtn = payChoi.id
+      const carte = creerCarte(image, cat, name, dif, temps , idBtn);
+   
         tousCartes.append(carte);
 
 })
@@ -180,7 +182,25 @@ const btnTous = document.getElementById('btn-tous')
   filterByTag("");
 };
   filterByTag("");
+  
 
+  const btnDelete = document.querySelectorAll('.btn-delet')
+
+  btnDelete.forEach(btn => {
+
+btn.addEventListener("click" , async () => {
+  const id = btn.dataset.id
+
+    try {
+       await axios.delete(`https://dummyjson.com/recipes/${id}`)
+      btn.closest(".carte-recette ").remove()
+    } catch (error) {
+      console.log(error)
+    }
+  
+})
+
+  })
 
   const btnAjoutData = document.getElementById('submitRecipeBtn')
   btnAjoutData.addEventListener("click" , async () =>{
@@ -198,6 +218,19 @@ const btnTous = document.getElementById('btn-tous')
             "https://dummyjson.com/recipes/add",
             nouvelleRecette
         );
+        document.getElementById("recipeName").value = ""
+         document.getElementById("recipeCuisine").value = ""
+           document.getElementById("recipeDifficulty").value = ""
+           document.getElementById("recipeTime").value = "",
+             document.getElementById("recipeImage").value = ""
+
+        recette.unshift(response.data)
+        const paysExiste = [...filtre.querySelectorAll("button")]
+    .some(btn => btn.dataset.tag === response.data.cuisine);
+
+if (!paysExiste) {
+    buttonFiltre(response.data.cuisine);
+}
 
         document.getElementById('addRecipeModal').classList.add('hidden')
         
@@ -229,3 +262,10 @@ afficherRecette();
 
   document.getElementById('addRecipeModal').classList.remove('hidden')
  })
+ document.getElementById('btn-annuler').addEventListener("click" , () => {
+  document.getElementById('addRecipeModal').classList.add('hidden')
+ })
+  document.getElementById('btn-annuler2').addEventListener("click" , () => {
+  document.getElementById('addRecipeModal').classList.add('hidden')
+ })
+  
