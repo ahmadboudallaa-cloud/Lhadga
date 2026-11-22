@@ -5,6 +5,7 @@ const api = axios.create({
 });
 const tousCartes = document.getElementById("recipesGrid");
 const filtre = document.getElementById("quickFilters")
+const btnAjoutData = document.getElementById('submitRecipeBtn')
 let recette = []
 
 function creerCarte(image, cat, name, dif, temps , idBtn) {
@@ -80,7 +81,7 @@ function buttonFiltre(pay){
   const button = document.createElement('button')
   button.className = "filter-chip px-3 py-1.5 rounded-lg text-xs font-medium bg-[#27272A] text-zinc-300 border border-[#3F3F46] hover:border-zinc-500 transition-colors"
 
-button.onclick = () =>  filterByTag(`${pay}`)
+
 button.dataset.tag = pay
 button.textContent = pay
  filtre.append(button)  
@@ -126,6 +127,78 @@ recetteFiltre.forEach(payChoi =>{
 
 }
 
+async function suppRecette(id , btn) {
+   const recetteTrouver = recette.find(e => e.id == id)
+    if(recetteTrouver.local === true){
+
+     recette = recette.filter( e => e.id != id)
+      btn.closest(".carte-recette").remove();
+    return;
+    }
+  
+  
+  
+  try {
+
+      console.log("ID envoyé :", id);
+        await api.delete(`/recipes/${id}`);
+        btn.closest(".carte-recette").remove();
+
+    } catch (error) {
+        console.log(error);
+        alert("Erreur : il yas un probleme le recette n'est pas");
+
+    }
+}
+async function addRecette() {
+  try {
+        const nouvelleRecette = {
+            name: document.getElementById("recipeName").value,
+            cuisine: document.getElementById("recipeCuisine").value,
+            difficulty: document.getElementById("recipeDifficulty").value,
+            cookTimeMinutes: Number(document.getElementById("recipeTime").value),
+            image: document.getElementById("recipeImage").value
+        };
+
+        const response = await api.post(
+            "/recipes/add",
+            nouvelleRecette
+        );
+        document.getElementById("recipeName").value = ""
+         document.getElementById("recipeCuisine").value = ""
+           document.getElementById("recipeDifficulty").value = ""
+           document.getElementById("recipeTime").value = "",
+             document.getElementById("recipeImage").value = ""
+        response.data.local = true;
+        recette.unshift(response.data)
+        const paysExiste = [...filtre.querySelectorAll("button")]
+    .some(btn => btn.dataset.tag === response.data.cuisine);
+
+if (!paysExiste) {
+    buttonFiltre(response.data.cuisine);
+}
+
+        document.getElementById('addRecipeModal').classList.add('hidden')
+        
+        const carte = creerCarte(
+    response.data.image,
+    response.data.cuisine,
+    response.data.name,
+    response.data.difficulty,
+    response.data.cookTimeMinutes,
+    response.data.id
+);
+
+tousCartes.prepend(carte);
+      
+    } catch (error) {
+        console.log(error);
+        alert("il yas un probleme la recette n'est pas ajouter")
+    }
+  
+}
+
+
 async function afficherRecette() {
 
 
@@ -137,7 +210,12 @@ async function afficherRecette() {
   
   
 
-    const data = await api.get("/recipes?limit=15");
+    const data = await api.get("/recipes", {
+      params: {
+        limit: 15
+
+      }
+    });
    recette = data.data.recipes;
   console.log(recette)
 const pays = [...new Set(recette.map(e => e.cuisine))]
@@ -184,71 +262,10 @@ const btnTous = document.getElementById('btn-tous')
   filterByTag("");
   
 
-  const btnDelete = document.querySelectorAll('.btn-delet')
 
-  btnDelete.forEach(btn => {
+ 
 
-btn.addEventListener("click" , async () => {
-  const id = btn.dataset.id
-
-    try {
-       await axios.delete(`https://dummyjson.com/recipes/${id}`)
-      btn.closest(".carte-recette ").remove()
-    } catch (error) {
-      console.log(error)
-    }
   
-})
-
-  })
-
-  const btnAjoutData = document.getElementById('submitRecipeBtn')
-  btnAjoutData.addEventListener("click" , async () =>{
-
- try {
-        const nouvelleRecette = {
-            name: document.getElementById("recipeName").value,
-            cuisine: document.getElementById("recipeCuisine").value,
-            difficulty: document.getElementById("recipeDifficulty").value,
-            cookTimeMinutes: Number(document.getElementById("recipeTime").value),
-            image: document.getElementById("recipeImage").value
-        };
-
-        const response = await axios.post(
-            "https://dummyjson.com/recipes/add",
-            nouvelleRecette
-        );
-        document.getElementById("recipeName").value = ""
-         document.getElementById("recipeCuisine").value = ""
-           document.getElementById("recipeDifficulty").value = ""
-           document.getElementById("recipeTime").value = "",
-             document.getElementById("recipeImage").value = ""
-
-        recette.unshift(response.data)
-        const paysExiste = [...filtre.querySelectorAll("button")]
-    .some(btn => btn.dataset.tag === response.data.cuisine);
-
-if (!paysExiste) {
-    buttonFiltre(response.data.cuisine);
-}
-
-        document.getElementById('addRecipeModal').classList.add('hidden')
-        
-        const carte = creerCarte(
-    response.data.image,
-    response.data.cuisine,
-    response.data.name,
-    response.data.difficulty,
-    response.data.cookTimeMinutes
-);
-
-tousCartes.prepend(carte);
-      
-    } catch (error) {
-        console.log(error);
-    }
-
-  })
     
   } catch (error) {
 
@@ -269,3 +286,20 @@ afficherRecette();
   document.getElementById('addRecipeModal').classList.add('hidden')
  })
   
+
+ tousCartes.addEventListener("click",(event) => {
+
+    const btn = event.target.closest(".btn-delet");
+
+    if (!btn) return;
+
+    const confirmation = confirm("Voulez-vous vraiment supprimer cette recette ?");
+
+    if (!confirmation) return;
+
+    const id = btn.dataset.id;
+
+    suppRecette(id , btn)
+
+});
+  btnAjoutData.addEventListener("click" ,  addRecette)
