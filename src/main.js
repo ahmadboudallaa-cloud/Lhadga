@@ -1,14 +1,22 @@
 import axios from "axios";
 const api = axios.create({
-    baseURL: "https://dummyjson.com",
-    timeout: 5000
+  baseURL: "https://dummyjson.com",
+  timeout: 5000,
 });
 const tousCartes = document.getElementById("recipesGrid");
-const filtre = document.getElementById("quickFilters")
-const btnAjoutData = document.getElementById('submitRecipeBtn')
-let recette = []
+const filtre = document.getElementById("quickFilters");
+const btnAjoutData = document.getElementById("submitRecipeBtn");
+const recipeName = document.getElementById("recipeName");
+const recipeCuisine = document.getElementById("recipeCuisine");
+const recipeDifficulty = document.getElementById("recipeDifficulty");
+const recipeTime = document.getElementById("recipeTime");
+const recipeImage = document.getElementById("recipeImage");
+let recette = [];
+const regexNom = /^[a-zA-ZÀ-ÿ\s'-]{3,60}$/;
+const regexCuisine = /^[a-zA-ZÀ-ÿ\s'-]{2,30}$/;
+const regexImage = /^https?:\/\/[^\s]+$/;
 
-function creerCarte(image, cat, name, dif, temps , idBtn) {
+function creerCarte(image, cat, name, dif, temps, idBtn) {
   const divCartes = document.createElement("div");
 
   divCartes.className =
@@ -22,7 +30,7 @@ function creerCarte(image, cat, name, dif, temps , idBtn) {
   img.alt = "image de la recette";
   img.className =
     "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300";
-  img.loading = "lazy"
+  img.loading = "lazy";
   const category = document.createElement("span");
   category.className =
     "absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#18181B]/85 backdrop-blur-md text-zinc-100 border border-[#3F3F46]";
@@ -67,8 +75,8 @@ function creerCarte(image, cat, name, dif, temps , idBtn) {
   deleteButton.className =
     "btn-delet inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/30 transition-colors";
   deleteButton.textContent = "Supprimer";
- 
-  deleteButton.dataset.id = idBtn
+
+  deleteButton.dataset.id = idBtn;
 
   footerCarte.append(clubName, deleteButton);
 
@@ -77,15 +85,105 @@ function creerCarte(image, cat, name, dif, temps , idBtn) {
 
   return divCartes;
 }
-function buttonFiltre(pay){
-  const button = document.createElement('button')
-  button.className = "filter-chip px-3 py-1.5 rounded-lg text-xs font-medium bg-[#27272A] text-zinc-300 border border-[#3F3F46] hover:border-zinc-500 transition-colors"
+function buttonFiltre(pay) {
+  const button = document.createElement("button");
+  button.className =
+    "filter-chip px-3 py-1.5 rounded-lg text-xs font-medium bg-[#27272A] text-zinc-300 border border-[#3F3F46] hover:border-zinc-500 transition-colors";
+
+  button.dataset.tag = pay;
+  button.textContent = pay;
+  filtre.append(button);
+}
+
+function recherche(){
+  const rechercheInput = document.getElementById("searchInput")
+  rechercheInput.addEventListener('input' , () => {
+    const valeur = rechercheInput.value.toLowerCase();
+
+    const resultat = recette.filter((element) => {
+      return element.name.toLowerCase().includes(valeur)
+    }) 
+     tousCartes.textContent = "";
+
+     resultat.forEach((element) => {
+    const carte = creerCarte(
+        element.image,
+        element.cuisine,
+        element.name,
+        element.difficulty,
+        element.cookTimeMinutes,
+        element.id,
+    );
+
+    tousCartes.prepend(carte);
+});
+    
+  })
+}
 
 
-button.dataset.tag = pay
-button.textContent = pay
- filtre.append(button)  
+function afficherErreur(champ, message) {
+  const erreur = document.getElementById(`error-${champ.id}`);
 
+  erreur.textContent = message;
+  erreur.classList.remove("hidden");
+}
+
+function cacherErreur(champ) {
+  const erreur = document.getElementById(`error-${champ.id}`);
+
+  erreur.textContent = "";
+  erreur.classList.add("hidden");
+}
+
+function validerFormulaire() {
+  let formulaireValide = true;
+
+  if (!regexNom.test(recipeName.value.trim())) {
+    afficherErreur(recipeName, "Le nom doit contenir entre 3 et 60 caractères.");
+    formulaireValide = false;
+  } else {
+    cacherErreur(recipeName);
+  }
+
+  if (!regexCuisine.test(recipeCuisine.value.trim())) {
+    afficherErreur(recipeCuisine, "La cuisine doit contenir entre 2 et 30 caractères.");
+    formulaireValide = false;
+  } else {
+    cacherErreur(recipeCuisine);
+  }
+
+  if (!["Facile", "Moyen", "Difficile"].includes(recipeDifficulty.value)) {
+    afficherErreur(recipeDifficulty, "Veuillez choisir une difficulté.");
+    formulaireValide = false;
+  } else {
+    cacherErreur(recipeDifficulty);
+  }
+
+  const temps = Number(recipeTime.value);
+
+  if (
+    recipeTime.value.trim() === "" ||
+    !Number.isInteger(temps) ||
+    temps < 1 ||
+    temps > 300
+  ) {
+    afficherErreur(recipeTime, "Le temps doit être un nombre entier entre 1 et 300.");
+    formulaireValide = false;
+  } else {
+    cacherErreur(recipeTime);
+  }
+
+  const image = recipeImage.value.trim();
+
+  if (image !== "" && !regexImage.test(image)) {
+    afficherErreur(recipeImage, "Veuillez saisir une URL HTTP ou HTTPS valide.");
+    formulaireValide = false;
+  } else {
+    cacherErreur(recipeImage);
+  }
+
+  return formulaireValide;
 }
 
 function chargement() {
@@ -93,213 +191,181 @@ function chargement() {
   tousCartes.classList.remove("hidden");
 }
 
-function filterByTag(pay){
-    tousCartes.textContent = "";
+function filterByTag(pay) {
+  tousCartes.textContent = "";
 
-  if(pay === ""){
-      recette.forEach((e) => {
+  if (pay === "") {
+    recette.forEach((e) => {
       const image = e.image;
       const cat = e.cuisine;
       const name = e.name;
       const dif = e.difficulty;
       const temps = e.cookTimeMinutes;
-      const idBtn = e.id
+      const idBtn = e.id;
 
-      const carte = creerCarte(image, cat, name, dif, temps , idBtn);
+      const carte = creerCarte(image, cat, name, dif, temps, idBtn);
 
-        tousCartes.append(carte);
+      tousCartes.append(carte);
     });
-  }else{
-    const recetteFiltre = recette.filter(e => e.cuisine === pay)
-recetteFiltre.forEach(payChoi =>{
-   const image = payChoi.image;
+  } else {
+    const recetteFiltre = recette.filter((e) => e.cuisine === pay);
+    recetteFiltre.forEach((payChoi) => {
+      const image = payChoi.image;
       const cat = payChoi.cuisine;
       const name = payChoi.name;
       const dif = payChoi.difficulty;
       const temps = payChoi.cookTimeMinutes;
-    const idBtn = payChoi.id
-      const carte = creerCarte(image, cat, name, dif, temps , idBtn);
-   
-        tousCartes.append(carte);
+      const idBtn = payChoi.id;
+      const carte = creerCarte(image, cat, name, dif, temps, idBtn);
 
-})
+      tousCartes.append(carte);
+    });
+  }
+}
+
+async function suppRecette(id, btn) {
+  const recetteTrouver = recette.find((e) => e.id == id);
+  if (recetteTrouver.local === true) {
+    recette = recette.filter((e) => e.id != id);
+    btn.closest(".carte-recette").remove();
+    return;
   }
 
-}
-
-async function suppRecette(id , btn) {
-   const recetteTrouver = recette.find(e => e.id == id)
-    if(recetteTrouver.local === true){
-
-     recette = recette.filter( e => e.id != id)
-      btn.closest(".carte-recette").remove();
-    return;
-    }
-  
-  
-  
   try {
-
-      console.log("ID envoyé :", id);
-        await api.delete(`/recipes/${id}`);
-        btn.closest(".carte-recette").remove();
-
-    } catch (error) {
-        console.log(error);
-        alert("Erreur : il yas un probleme le recette n'est pas");
-
-    }
+    console.log("ID envoyé :", id);
+    await api.delete(`/recipes/${id}`);
+    recette = recette.filter((e) => e.id != id);
+    btn.closest(".carte-recette").remove();
+  } catch (error) {
+    console.log(error);
+    alert("Erreur : il yas un probleme le recette n'est pas");
+  }
 }
 async function addRecette() {
+
+if(!validerFormulaire()) return;
+
   try {
-        const nouvelleRecette = {
-            name: document.getElementById("recipeName").value,
-            cuisine: document.getElementById("recipeCuisine").value,
-            difficulty: document.getElementById("recipeDifficulty").value,
-            cookTimeMinutes: Number(document.getElementById("recipeTime").value),
-            image: document.getElementById("recipeImage").value
-        };
+    const nouvelleRecette = {
+      name: document.getElementById("recipeName").value,
+      cuisine: document.getElementById("recipeCuisine").value,
+      difficulty: document.getElementById("recipeDifficulty").value,
+      cookTimeMinutes: Number(document.getElementById("recipeTime").value),
+      image: document.getElementById("recipeImage").value,
+    };
 
-        const response = await api.post(
-            "/recipes/add",
-            nouvelleRecette
-        );
-        document.getElementById("recipeName").value = ""
-         document.getElementById("recipeCuisine").value = ""
-           document.getElementById("recipeDifficulty").value = ""
-           document.getElementById("recipeTime").value = "",
-             document.getElementById("recipeImage").value = ""
-        response.data.local = true;
-        recette.unshift(response.data)
-        const paysExiste = [...filtre.querySelectorAll("button")]
-    .some(btn => btn.dataset.tag === response.data.cuisine);
+    const response = await api.post("/recipes/add", nouvelleRecette);
+    document.getElementById("recipeName").value = "";
+    document.getElementById("recipeCuisine").value = "";
+    document.getElementById("recipeDifficulty").value = "";
+    ((document.getElementById("recipeTime").value = ""),
+      (document.getElementById("recipeImage").value = ""));
+    response.data.local = true;
+    recette.unshift(response.data);
+    const paysExiste = [...filtre.querySelectorAll("button")].some(
+      (btn) => btn.dataset.tag === response.data.cuisine,
+    );
 
-if (!paysExiste) {
-    buttonFiltre(response.data.cuisine);
-}
-
-        document.getElementById('addRecipeModal').classList.add('hidden')
-        
-        const carte = creerCarte(
-    response.data.image,
-    response.data.cuisine,
-    response.data.name,
-    response.data.difficulty,
-    response.data.cookTimeMinutes,
-    response.data.id
-);
-
-tousCartes.prepend(carte);
-      
-    } catch (error) {
-        console.log(error);
-        alert("il yas un probleme la recette n'est pas ajouter")
+    if (!paysExiste) {
+      buttonFiltre(response.data.cuisine);
     }
-  
-}
 
+    document.getElementById("addRecipeModal").classList.add("hidden");
+
+    const carte = creerCarte(
+      response.data.image,
+      response.data.cuisine,
+      response.data.name,
+      response.data.difficulty,
+      response.data.cookTimeMinutes,
+      response.data.id,
+    );
+
+    tousCartes.prepend(carte);
+  } catch (error) {
+    console.log(error);
+    alert("il yas un probleme la recette n'est pas ajouter");
+  }
+}
 
 async function afficherRecette() {
-
-
-
   try {
-   setTimeout(() => {
-   chargement()
-},1000)
-  
-  
+    setTimeout(() => {
+      chargement();
+    }, 1000);
 
     const data = await api.get("/recipes", {
       params: {
-        limit: 15
-
-      }
+        limit: 15,
+      },
     });
-   recette = data.data.recipes;
-  console.log(recette)
-const pays = [...new Set(recette.map(e => e.cuisine))]
-pays.forEach(pay => {
-  return  buttonFiltre(pay)
-})
+    recette = data.data.recipes;
+    console.log(recette);
+    const pays = [...new Set(recette.map((e) => e.cuisine))];
+    pays.forEach((pay) => {
+      return buttonFiltre(pay);
+    });
 
-const buttons = document.querySelectorAll("[data-tag]")
+    const buttons = document.querySelectorAll("[data-tag]");
 
-  
-  
-buttons.forEach(button => {
+    buttons.forEach((button) => {
+      button.onclick = () => {
+        const pay = button.dataset.tag;
+        buttons.forEach((btn) => {
+          btn.classList.remove("text-[#18181B]", "bg-[#F59E0B]");
+          btn.classList.add("text-zinc-300", "bg-[#27272A]");
+        });
+        button.classList.remove("text-zinc-300", "bg-[#27272A]");
+        button.classList.add("text-[#18181B]", "bg-[#F59E0B]");
 
+        filterByTag(pay);
+      };
+    });
+    const btnTous = document.getElementById("btn-tous");
+    btnTous.onclick = () => {
+      buttons.forEach((btn) => {
+        btn.classList.remove("text-[#18181B]", "bg-[#F59E0B]");
+        btn.classList.add("text-zinc-300", "bg-[#27272A]");
+      });
 
-
-
-
-  
-  button.onclick = () => {
-    const pay = button.dataset.tag
-  buttons.forEach(btn => {
-    btn.classList.remove( "text-[#18181B]", "bg-[#F59E0B]")
-    btn.classList.add("text-zinc-300" , "bg-[#27272A]")
-  })
-    button.classList.remove("text-zinc-300" , "bg-[#27272A]")
-    button.classList.add("text-[#18181B]", "bg-[#F59E0B]")
-
-    filterByTag(pay)
-  }
-})
-const btnTous = document.getElementById('btn-tous')
-  btnTous.onclick = () => {
-  
-
-  buttons.forEach(btn => {
-    btn.classList.remove("text-[#18181B]", "bg-[#F59E0B]");
-    btn.classList.add("text-zinc-300", "bg-[#27272A]");
-  });
-
-  btnTous.classList.remove("bg-[#27272A]", "text-zinc-300");
-  btnTous.classList.add("bg-[#F59E0B]", "text-[#18181B]");
-  filterByTag("");
-};
-  filterByTag("");
-  
-
-
- 
-
-  
-    
+      btnTous.classList.remove("bg-[#27272A]", "text-zinc-300");
+      btnTous.classList.add("bg-[#F59E0B]", "text-[#18181B]");
+      filterByTag("");
+    };
+    filterByTag("");
+    recherche()
   } catch (error) {
-
-document.getElementById('errorState').classList.remove('hidden')
-document.getElementById('errorTitle').textContent = "error de serveur"
-document.getElementById('errorDescription').textContent = "il yas un probleme de recuperation de donner ressayer"
+    document.getElementById("errorState").classList.remove("hidden");
+    document.getElementById("errorTitle").textContent = "error de serveur";
+    document.getElementById("errorDescription").textContent =
+      "il yas un probleme de recuperation de donner ressayer";
   }
 }
 afficherRecette();
- document.getElementById('btn-ajouter-recette').addEventListener("click" , () =>{
-
-  document.getElementById('addRecipeModal').classList.remove('hidden')
- })
- document.getElementById('btn-annuler').addEventListener("click" , () => {
-  document.getElementById('addRecipeModal').classList.add('hidden')
- })
-  document.getElementById('btn-annuler2').addEventListener("click" , () => {
-  document.getElementById('addRecipeModal').classList.add('hidden')
- })
-  
-
- tousCartes.addEventListener("click",(event) => {
-
-    const btn = event.target.closest(".btn-delet");
-
-    if (!btn) return;
-
-    const confirmation = confirm("Voulez-vous vraiment supprimer cette recette ?");
-
-    if (!confirmation) return;
-
-    const id = btn.dataset.id;
-
-    suppRecette(id , btn)
-
+document.getElementById("btn-ajouter-recette").addEventListener("click", () => {
+  document.getElementById("addRecipeModal").classList.remove("hidden");
 });
-  btnAjoutData.addEventListener("click" ,  addRecette)
+document.getElementById("btn-annuler").addEventListener("click", () => {
+  document.getElementById("addRecipeModal").classList.add("hidden");
+});
+document.getElementById("btn-annuler2").addEventListener("click", () => {
+  document.getElementById("addRecipeModal").classList.add("hidden");
+});
+
+tousCartes.addEventListener("click", (event) => {
+  const btn = event.target.closest(".btn-delet");
+
+  if (!btn) return;
+
+  const confirmation = confirm(
+    "Voulez-vous vraiment supprimer cette recette ?",
+  );
+
+  if (!confirmation) return;
+
+  const id = btn.dataset.id;
+
+  suppRecette(id, btn);
+});
+btnAjoutData.addEventListener("click", addRecette);
+
